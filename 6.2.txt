@@ -1,0 +1,87 @@
+console.log("--- Simulated JWT Banking API ---");
+
+const user = { username: "user1", password: "password123" };
+let balance = 1000;
+const SECRET = "myjwtsecretkey";
+
+// Generate a fake JWT-like token (Base64)
+function generateToken(username) {
+  return Buffer.from(username + ":" + SECRET).toString("base64");
+}
+
+// Verify token
+function verifyToken(token) {
+  if (!token) return null;
+  const decoded = Buffer.from(token, "base64").toString("utf-8");
+  return decoded.includes(SECRET) ? decoded.split(":")[0] : null;
+}
+
+// Login endpoint simulation
+function login(username, password) {
+  console.log("POST /login");
+  if (username === user.username && password === user.password) {
+    const token = generateToken(username);
+    console.log("Response 200 OK");
+    console.log("token:");
+    console.log(token + "\n");
+    return token;
+  } else {
+    console.log("Response 401 Unauthorized");
+    console.log("message: 'Invalid username or password'\n");
+    return null;
+  }
+}
+
+// GET /balance simulation
+function getBalance(token) {
+  console.log("GET /balance");
+  const username = verifyToken(token);
+  if (!username) {
+    console.log("Response 403 Forbidden");
+    console.log("message: 'Invalid or expired token'\n");
+  } else {
+    console.log("Response 200 OK");
+    console.log(`balance: ${balance}\n`);
+  }
+}
+
+// POST /deposit simulation
+function deposit(token, amount) {
+  console.log("POST /deposit");
+  const username = verifyToken(token);
+  if (!username) {
+    console.log("Response 403 Forbidden");
+    console.log("message: 'Invalid or expired token'\n");
+  } else {
+    balance += amount;
+    console.log("Response 200 OK");
+    console.log(`message: 'Deposited $${amount}, newBalance: ${balance}'\n`);
+  }
+}
+
+// POST /withdraw simulation
+function withdraw(token, amount) {
+  console.log("POST /withdraw");
+  const username = verifyToken(token);
+  if (!username) {
+    console.log("Response 403 Forbidden");
+    console.log("message: 'Invalid or expired token'\n");
+  } else if (amount > balance) {
+    console.log("Response 400 Bad Request");
+    console.log("message: 'Insufficient balance'\n");
+  } else {
+    balance -= amount;
+    console.log("Response 200 OK");
+    console.log(`message: 'Withdrew $${amount}, newBalance: ${balance}'\n`);
+  }
+}
+
+// ==== Simulate the API flow ====
+const token = login("user1", "password123"); // login success
+
+getBalance("wrongtoken");  // invalid token
+getBalance(token);         // valid token
+deposit(token, 250);       // deposit
+withdraw(token, 150);      // withdraw
+
+console.log("Code Execution Successful");
